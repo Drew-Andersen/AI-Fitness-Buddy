@@ -1,21 +1,23 @@
 import { generateWorkout } from "../features/workout/workoutAPI"
 import { useState } from "react"
 import WorkoutForm from "../features/workout/WorkoutForm"
+import WorkoutList from "../features/workout/WorkoutList"
 
 export default function WorkoutPage() {
-    const [plan, setPlan] = useState(null)
+    const [refresh, setRefresh] = useState(false)
 
     async function handleGenerate(data){
-        const result = await generateWorkout(data)
-        setPlan(result)
+        await generateWorkout(data)
+        setRefresh((prev) => !prev)
     }
 
     return (
-        <div>
+        <div style={{ padding: "2rem" }}>
+            <h2>Generate New Workout</h2>
             <WorkoutForm onSubmit={handleGenerate} />
-            {plan && (
-                <pre>{JSON.stringify(plan, null, 2)}</pre>
-            )}
+            <hr style={{ margin: "2rem 0" }} />
+            <h2>Saved Workouts</h2>
+            <WorkoutList key={refresh} />
         </div>
     )
 }
