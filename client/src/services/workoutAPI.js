@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3001" // Input the server URL
+const API_URL = "http://localhost:3001" 
 
 export async function generateWorkout(userID) {
     try {

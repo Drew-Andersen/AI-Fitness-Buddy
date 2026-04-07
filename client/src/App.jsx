@@ -1,4 +1,3 @@
-import './App.css'
 import WorkoutPage from './pages/WorkoutPage'
 
 function App() {

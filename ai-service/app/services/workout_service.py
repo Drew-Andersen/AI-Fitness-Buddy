@@ -60,7 +60,6 @@ def generate_workout_plan(user_data):
 
     content = response.choices[0].message.content
 
-    # 🔥 CLEAN IT
     cleaned = clean_ai_response(content)
 
     try:
