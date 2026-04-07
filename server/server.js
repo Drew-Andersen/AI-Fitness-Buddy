@@ -1,24 +1,17 @@
 const express = require("express");
 const cors = require("cors");
+const bodyParser = require("body-parser")
+
+const workoutRoutes = require("./routes/workoutRoutes")
 
 const app = express();
-
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
 
-// Test route
-app.get("/", (req, res) => {
-  res.send("Server is running");
-});
+app.use("/workout", workoutRoutes)
 
-app.get("/workout/generate", (req, res) => {
-  console.log("HIT WORKOUT ROUTE");
-  res.json({ message: "Workout route working" });
-});
+const PORT = process.env.PORT || 3001;
 
-const PORT = 3001;
-
-// IMPORTANT: This must be at the top level
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

@@ -1,20 +1,16 @@
+const { generateWorkoutAI } = require("../integrations/aiClient")
+
 async function generateWorkout(req, res) {
+    try {
+        const userData = req.body
 
-    console.log("HIT WORKOUT ROUTE")
-    req.json({message: "Workout route working"})
+        const aiResponse = await generateWorkoutAI(userData)
 
-    // const { userID } = req.body
-
-    // Dummy Data to get working
-    // const workoutPlan = {
-    //     userID,
-    //     plan: [
-    //         { day: "Monday", exercise: "Push-Ups", reps: 20},
-    //         { day: "Tuesday", exercise: "Squats", reps: 15}
-    //     ]
-    // }
-
-    // res.json(workoutPlan)
+        res.json(aiResponse)
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({ err: "Failed to generate workout" })
+    }
 }
 
 module.exports = { generateWorkout }
