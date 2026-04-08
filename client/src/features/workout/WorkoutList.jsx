@@ -9,7 +9,7 @@ export default function WorkoutList() {
     fetch("http://localhost:3001/workout")
       .then((res) => res.json())
       .then((data) => {
-        setWorkouts(data); 
+        setWorkouts(data);
         setLoading(false);
       })
       .catch((err) => {
@@ -20,7 +20,38 @@ export default function WorkoutList() {
 
   const toggleExpand = (id) => {
     setExpandedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(id)
+        ? prev.filter((i) => i !== id)
+        : [...prev, id]
+    );
+  };
+
+  // Handle input changes
+  const handleInputChange = (workoutId, dayIndex, exIndex, field, value) => {
+    setWorkouts((prev) =>
+      prev.map((workout) => {
+        if (workout.id !== workoutId) return workout;
+
+        const updatedPlan = workout.plan[0]?.plan.map((day, dIdx) => {
+          if (dIdx !== dayIndex) return day;
+
+          const updatedExercises = day.exercises.map((ex, eIdx) => {
+            if (eIdx !== exIndex) return ex;
+
+            return {
+              ...ex,
+              [field]: value,
+            };
+          });
+
+          return { ...day, exercises: updatedExercises };
+        });
+
+        return {
+          ...workout,
+          plan: [{ ...workout.plan[0], plan: updatedPlan }],
+        };
+      })
     );
   };
 
@@ -31,6 +62,7 @@ export default function WorkoutList() {
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {workouts.map((workout) => {
         const isExpanded = expandedIds.includes(workout.id);
+        const dayPlans = workout.plan[0]?.plan || [];
 
         return (
           <div
@@ -42,6 +74,7 @@ export default function WorkoutList() {
               background: "#f9f9f9",
             }}
           >
+            {/* Header */}
             <div
               style={{
                 display: "flex",
@@ -51,52 +84,87 @@ export default function WorkoutList() {
               onClick={() => toggleExpand(workout.id)}
             >
               <div>
-                <p>
-                  <strong>Workout ID:</strong> {workout.id}
-                </p>
+                <p><strong>Workout ID:</strong> {workout.id}</p>
                 <p>
                   <strong>Date:</strong>{" "}
-                  {new Date(workout.created_at).toLocaleString()}
+                  {new Date(workout.created_at).toLocaleDateString()}
                 </p>
               </div>
               <div>{isExpanded ? "▲ Collapse" : "▼ Expand"}</div>
             </div>
 
+            {/* Expanded */}
             {isExpanded && (
               <div style={{ marginTop: "1rem" }}>
-                {workout.plan[0]?.plan?.length ? (
-                  workout.plan[0].plan.map((dayPlan, index) => {
-                    const exercises =
-                      dayPlan.exercises && Array.isArray(dayPlan.exercises)
-                        ? dayPlan.exercises
-                        : [];
+                {dayPlans.length ? (
+                  dayPlans.map((day, dayIndex) => (
+                    <div key={dayIndex} style={{ marginBottom: "1rem" }}>
+                      <h3>{day.day} - {day.focus}</h3>
 
-                    return (
-                      <div
-                        key={index}
+                      <table
                         style={{
-                          borderTop: "1px solid #ddd",
-                          paddingTop: "0.5rem",
-                          marginTop: "0.5rem",
+                          width: "100%",
+                          borderCollapse: "collapse",
                         }}
                       >
-                        <h4>
-                          {dayPlan.day}: {dayPlan.focus}
-                        </h4>
-                        {exercises.length ? (
-                          <ul>
-                            {exercises.map((ex, i) => (
-                              <li key={i}>
-                                {ex.name} - {ex.sets} sets x {ex.reps}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p>No exercises available</p>
-                        )}
-                      </div>
-                    );
-                  })
+                        <thead>
+                          <tr>
+                            <th>Exercise</th>
+                            <th>Sets</th>
+                            <th>Target</th>
+                            <th>Weight</th>
+                            <th>Completed</th>
+                          </tr>
+                        </thead>
+
+                        <tbody>
+                          {day.exercises?.map((ex, exIndex) => (
+                            <tr key={exIndex}>
+                              <td>{ex.name}</td>
+                              <td>{ex.sets}</td>
+                              <td>{ex.reps || ex.duration}</td>
+
+                              {/* Weight input */}
+                              <td>
+                                <input
+                                  type="number"
+                                  placeholder="lbs"
+                                  value={ex.weightUsed || ""}
+                                  onChange={(e) =>
+                                    handleInputChange(
+                                      workout.id,
+                                      dayIndex,
+                                      exIndex,
+                                      "weightUsed",
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              </td>
+
+                              {/* Reps completed */}
+                              <td>
+                                <input
+                                  type="text"
+                                  placeholder="reps"
+                                  value={ex.repsCompleted || ""}
+                                  onChange={(e) =>
+                                    handleInputChange(
+                                      workout.id,
+                                      dayIndex,
+                                      exIndex,
+                                      "repsCompleted",
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ))
                 ) : (
                   <p>No plan available</p>
                 )}
