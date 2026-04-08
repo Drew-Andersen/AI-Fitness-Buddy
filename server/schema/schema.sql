@@ -22,3 +22,17 @@ CREATE TABLE workouts (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- For development purposes only **Delete for production level**
+DROP TABLE ID EXISTS workout_logs;
+
+CREATE TABLE workout_logs(
+    id SERIAL PRIMARY KEY
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    workout_id INTEGER REFERENCES workouts(id) ON DELETE CASCADE,
+    day TEXT,
+    exercise_name TEXT,
+    weight NUMERIC,
+    reps_completed TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

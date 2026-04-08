@@ -26,7 +26,6 @@ export default function WorkoutList() {
     );
   };
 
-  // Handle input changes
   const handleInputChange = (workoutId, dayIndex, exIndex, field, value) => {
     setWorkouts((prev) =>
       prev.map((workout) => {
@@ -40,8 +39,8 @@ export default function WorkoutList() {
 
             return {
               ...ex,
-              [field]: value,
-            };
+              [field]: value
+            }
           });
 
           return { ...day, exercises: updatedExercises };
@@ -54,6 +53,20 @@ export default function WorkoutList() {
       })
     );
   };
+
+  const saveLog = async (log) => {
+    try {
+      await fetch("http://localhost:3001/workout-logs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(log),
+      })
+    } catch (err) {
+      console.error("Failed to save log", err)
+    }
+  }
 
   if (loading) return <p>Loading workouts...</p>;
   if (!workouts.length) return <p>No workouts saved yet.</p>;
@@ -74,7 +87,6 @@ export default function WorkoutList() {
               background: "#f9f9f9",
             }}
           >
-            {/* Header */}
             <div
               style={{
                 display: "flex",
@@ -93,7 +105,6 @@ export default function WorkoutList() {
               <div>{isExpanded ? "▲ Collapse" : "▼ Expand"}</div>
             </div>
 
-            {/* Expanded */}
             {isExpanded && (
               <div style={{ marginTop: "1rem" }}>
                 {dayPlans.length ? (
@@ -124,7 +135,7 @@ export default function WorkoutList() {
                               <td>{ex.sets}</td>
                               <td>{ex.reps || ex.duration}</td>
 
-                              {/* Weight input */}
+                              {/* Weight Used */}
                               <td>
                                 <input
                                   type="number"
@@ -138,6 +149,16 @@ export default function WorkoutList() {
                                       "weightUsed",
                                       e.target.value
                                     )
+                                  }
+                                  onBlur={(e) =>
+                                    saveLog({
+                                      user_id: 1,
+                                      workout_id: workout.id,
+                                      day: day.day,
+                                      exercise_name: ex.name,
+                                      weight: e.target.value,
+                                      reps_completed: ex.repsCompleted || "",
+                                    })
                                   }
                                 />
                               </td>
@@ -157,6 +178,16 @@ export default function WorkoutList() {
                                       e.target.value
                                     )
                                   }
+                                  onBlur={(e) =>
+                                    saveLog({
+                                      user_id: 1,
+                                      workout_id: workout.id,
+                                      day: day.day,
+                                      exercise_name: ex.name,
+                                      weight: ex.weightUsed || "",
+                                      reps_completed: e.target.value
+                                    })
+                                  } 
                                 />
                               </td>
                             </tr>

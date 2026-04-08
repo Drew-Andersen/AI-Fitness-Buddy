@@ -16,7 +16,7 @@ const saveWorkout = async (userId, plan) => {
   }
 };
 
-export const getWorkout = async () => {
+const getWorkout = async () => {
   try {
     const result = await pool.query(
       "SELECT * FROM workouts ORDER BY created_at DESC"

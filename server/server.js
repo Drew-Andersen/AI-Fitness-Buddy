@@ -3,12 +3,14 @@ const cors = require("cors");
 const bodyParser = require("body-parser")
 
 const workoutRoutes = require("./routes/workoutRoutes")
+const workoutLogRoutes = require("./routes/workoutLogRoutes")
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
 app.use("/workout", workoutRoutes)
+app.use("/workout-logs", workoutLogRoutes)
 
 const PORT = process.env.PORT || 3001;
 
