@@ -8,6 +8,7 @@ CREATE DATABASE ai_fitness;
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email TEXT UNIQUE,
+    password TEXT,
     weight INT,
     goal TEXT,
     experience TEXT,

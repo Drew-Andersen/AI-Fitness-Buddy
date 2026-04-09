@@ -4,6 +4,7 @@ const bodyParser = require("body-parser")
 
 const workoutRoutes = require("./routes/workoutRoutes")
 const workoutLogRoutes = require("./routes/workoutLogRoutes")
+const authRoutes = require("./routes/authRoutes")
 
 const app = express();
 app.use(cors());
@@ -11,6 +12,7 @@ app.use(bodyParser.json());
 
 app.use("/workout", workoutRoutes)
 app.use("/workout-logs", workoutLogRoutes)
+app.use("/auth", authRoutes)
 
 const PORT = process.env.PORT || 3001;
 
