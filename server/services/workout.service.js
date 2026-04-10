@@ -16,19 +16,15 @@ const saveWorkout = async (userId, plan) => {
   }
 };
 
-const getWorkout = async () => {
+const getWorkout = async (userId) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM workouts ORDER BY created_at DESC"
+      "SELECT * FROM workouts WHERE user_id = $1 ORDER BY created_at DESC",
     );
 
     return result.rows.map((row) => ({
       ...row,
-      plan: Array.isArray(row.plan)
-        ? row.plan
-        : typeof row.plan === "string"
-        ? JSON.parse(row.plan)
-        : [], 
+      plan: typeof row.plan === "string" ? JSON.parse(row.plan) : row.plan, 
     }));
   } catch (err) {
     console.error("Error fetching workouts:", err);

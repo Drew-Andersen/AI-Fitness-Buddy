@@ -1,22 +1,31 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function WorkoutList() {
   const [workouts, setWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedIds, setExpandedIds] = useState([]);
 
+  const token = localStorage.getItem("token")
+
   useEffect(() => {
-    fetch("http://localhost:3001/workout")
-      .then((res) => res.json())
+    fetch("http://localhost:3001/workout", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error ("Unauthorized or failed request")
+        return res.json()
+      })
       .then((data) => {
-        setWorkouts(data);
-        setLoading(false);
+        setWorkouts(data || [])
+        setLoading(false)
       })
       .catch((err) => {
-        console.error("Failed to fetch workouts", err);
-        setLoading(false);
-      });
-  }, []);
+        console.error("Failed to fetch workouts", err)
+        setLoading(false)
+      })
+  }, [token]);
 
   const toggleExpand = (id) => {
     setExpandedIds((prev) =>
@@ -31,24 +40,24 @@ export default function WorkoutList() {
       prev.map((workout) => {
         if (workout.id !== workoutId) return workout;
 
-        const updatedPlan = workout.plan[0]?.plan.map((day, dIdx) => {
+        const updatedPlan = workout.plan?.[0]?.plan?.map((day, dIdx) => {
           if (dIdx !== dayIndex) return day;
 
-          const updatedExercises = day.exercises.map((ex, eIdx) => {
+          const updatedExercises = day.exercises?.map((ex, eIdx) => {
             if (eIdx !== exIndex) return ex;
 
             return {
               ...ex,
               [field]: value
             }
-          });
+          }) || [];
 
           return { ...day, exercises: updatedExercises };
         });
 
         return {
           ...workout,
-          plan: [{ ...workout.plan[0], plan: updatedPlan }],
+          plan: [{ ...workout.plan?.[0], plan: updatedPlan }],
         };
       })
     );
@@ -59,7 +68,8 @@ export default function WorkoutList() {
       await fetch("http://localhost:3001/workout-logs", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(log),
       })
@@ -75,7 +85,7 @@ export default function WorkoutList() {
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {workouts.map((workout) => {
         const isExpanded = expandedIds.includes(workout.id);
-        const dayPlans = workout.plan[0]?.plan || [];
+        const dayPlans = workout.plan?.[0]?.plan || [];
 
         return (
           <div
@@ -152,7 +162,6 @@ export default function WorkoutList() {
                                   }
                                   onBlur={(e) =>
                                     saveLog({
-                                      user_id: 1,
                                       workout_id: workout.id,
                                       day: day.day,
                                       exercise_name: ex.name,
@@ -180,7 +189,6 @@ export default function WorkoutList() {
                                   }
                                   onBlur={(e) =>
                                     saveLog({
-                                      user_id: 1,
                                       workout_id: workout.id,
                                       day: day.day,
                                       exercise_name: ex.name,

@@ -1,13 +1,9 @@
 const express = require("express")
 const router = express.Router()
-const { generateWorkout } = require("../controllers/workoutController")
-const { getWorkouts } = require("../controllers/workoutController")
+const { generateWorkout, getWorkouts } = require("../controllers/workoutController")
+const authMiddleware = require("../middleware/authMiddleware")
 
-// For testing only
-// router.get("/generate", (req, res) => {
-//     res.send("Workout endpoint is working!")
-// })
-router.post("/generate", generateWorkout)
-router.get("/", getWorkouts)
+router.get("/", authMiddleware, getWorkouts)
+router.post("/generate", authMiddleware, generateWorkout)
 
 module.exports = router

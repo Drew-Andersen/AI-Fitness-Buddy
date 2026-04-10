@@ -3,22 +3,27 @@ const { saveWorkout, getWorkout } = require("../services/workout.service");
 
 async function generateWorkout(req, res) {
   try {
-    const { userId, weight, goal, experience } = req.body;
+    const { weight, goal, experience } = req.body;
+
+    const userId = req.user.userId
 
     const plan = await generateWorkoutAI({ weight, goal, experience });
 
     const savedWorkout = await saveWorkout(userId, plan);
 
-    res.json(savedWorkout);
+    res.json(savedWorkout)
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ err: "Failed to generate workout" });
+    console.error(err)
+    res.status(500).json({ err: "Failed to generate workout" })
   }
 }
 
 async function getWorkouts(req, res) {
   try {
-    const workouts = await getWorkout();
+    const userId = req.userId
+
+    const workouts = await getWorkout(userId);
+    
     res.json(workouts);
   } catch (err) {
     console.error("Controller error fetching workouts:", err); 
