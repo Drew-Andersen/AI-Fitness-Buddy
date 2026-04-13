@@ -24,9 +24,6 @@ CREATE TABLE workouts (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- For development purposes only **Delete for production level**
-DROP TABLE ID EXISTS workout_logs;
-
 CREATE TABLE workout_logs(
     id SERIAL PRIMARY KEY
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -35,5 +32,12 @@ CREATE TABLE workout_logs(
     exercise_name TEXT,
     weight NUMERIC,
     reps_completed TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE bodyweight_logs (
+    id SERIAL PRIMARY KEY,
+    user_id INt REFERENCES users(id) ON DELETE CASCADE,
+    weight NUMERIC NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -32,4 +32,12 @@ const getExerciseProgress = async (user_id, exercise_name) => {
     return result.rows
 }
 
-module.exports = { saveWorkoutLog, getExerciseProgress }
+const getWorkoutLogs = async (userId) => {
+    const result = await pool.query(
+        `SELECT * FROM workout_logs WHERE user_id = $1 ORDER BY created_at ASC`,
+        [userId]
+    )
+    return result.rows
+}
+
+module.exports = { saveWorkoutLog, getExerciseProgress, getWorkoutLogs }

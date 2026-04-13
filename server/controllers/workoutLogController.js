@@ -1,4 +1,4 @@
-const { saveWorkoutLog, getExerciseProgress } = require("../services/workoutLog.service")
+const { saveWorkoutLog, getExerciseProgress, getWorkoutLogs } = require("../services/workoutLog.service")
 
 async function createLog(req, res) {
     try {
@@ -22,4 +22,17 @@ async function getProgress(req, res) {
     }
 }
 
-module.exports = { createLog, getProgress }
+async function getLogs(req, res) {
+    try {
+        const userId = req.user.userId
+
+        const logs = await getWorkoutLogs(userId)
+
+        res.json(logs) 
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({ error: "Failed to fetch logs" })
+    }
+}
+
+module.exports = { createLog, getProgress, getLogs }
