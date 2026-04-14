@@ -20,6 +20,7 @@ const getWorkout = async (userId) => {
   try {
     const result = await pool.query(
       "SELECT * FROM workouts WHERE user_id = $1 ORDER BY created_at DESC",
+      [userId]
     );
 
     return result.rows.map((row) => ({

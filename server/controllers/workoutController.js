@@ -20,7 +20,7 @@ async function generateWorkout(req, res) {
 
 async function getWorkouts(req, res) {
   try {
-    const userId = req.userId
+    const userId = req.user.userId
 
     const workouts = await getWorkout(userId);
     

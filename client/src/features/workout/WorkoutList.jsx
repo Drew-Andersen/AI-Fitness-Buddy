@@ -5,33 +5,38 @@ export default function WorkoutList() {
   const [loading, setLoading] = useState(true);
   const [expandedIds, setExpandedIds] = useState([]);
 
-  const token = localStorage.getItem("token")
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
+    if (!token) return;
+
     fetch("http://localhost:3001/workout", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     })
-      .then((res) => {
-        if (!res.ok) throw new Error ("Unauthorized or failed request")
-        return res.json()
+      .then(async (res) => {
+        const text = await res.text();
+
+        console.log("WORKOUT RESPONSE:", text);
+
+        if (!res.ok) throw new Error(text || "Request failed");
+
+        return text ? JSON.parse(text) : [];
       })
       .then((data) => {
-        setWorkouts(data || [])
-        setLoading(false)
+        setWorkouts(data || []);
+        setLoading(false);
       })
       .catch((err) => {
-        console.error("Failed to fetch workouts", err)
-        setLoading(false)
-      })
+        console.error("Failed to fetch workouts", err);
+        setLoading(false);
+      });
   }, [token]);
 
   const toggleExpand = (id) => {
     setExpandedIds((prev) =>
-      prev.includes(id)
-        ? prev.filter((i) => i !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
 
@@ -43,14 +48,15 @@ export default function WorkoutList() {
         const updatedPlan = workout.plan?.[0]?.plan?.map((day, dIdx) => {
           if (dIdx !== dayIndex) return day;
 
-          const updatedExercises = day.exercises?.map((ex, eIdx) => {
-            if (eIdx !== exIndex) return ex;
+          const updatedExercises =
+            day.exercises?.map((ex, eIdx) => {
+              if (eIdx !== exIndex) return ex;
 
-            return {
-              ...ex,
-              [field]: value
-            }
-          }) || [];
+              return {
+                ...ex,
+                [field]: value,
+              };
+            }) || [];
 
           return { ...day, exercises: updatedExercises };
         });
@@ -59,24 +65,29 @@ export default function WorkoutList() {
           ...workout,
           plan: [{ ...workout.plan?.[0], plan: updatedPlan }],
         };
-      })
+      }),
     );
   };
 
   const saveLog = async (log) => {
     try {
-      await fetch("http://localhost:3001/workout-logs", {
+      const res = await fetch("http://localhost:3001/workout-logs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(log),
-      })
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text);
+      }
     } catch (err) {
-      console.error("Failed to save log", err)
+      console.error("Failed to save log", err);
     }
-  }
+  };
 
   if (loading) return <p>Loading workouts...</p>;
   if (!workouts.length) return <p>No workouts saved yet.</p>;
@@ -106,7 +117,9 @@ export default function WorkoutList() {
               onClick={() => toggleExpand(workout.id)}
             >
               <div>
-                <p><strong>Workout ID:</strong> {workout.id}</p>
+                <p>
+                  <strong>Workout ID:</strong> {workout.id}
+                </p>
                 <p>
                   <strong>Date:</strong>{" "}
                   {new Date(workout.created_at).toLocaleDateString()}
@@ -120,7 +133,9 @@ export default function WorkoutList() {
                 {dayPlans.length ? (
                   dayPlans.map((day, dayIndex) => (
                     <div key={dayIndex} style={{ marginBottom: "1rem" }}>
-                      <h3>{day.day} - {day.focus}</h3>
+                      <h3>
+                        {day.day} - {day.focus}
+                      </h3>
 
                       <table
                         style={{
@@ -157,15 +172,15 @@ export default function WorkoutList() {
                                       dayIndex,
                                       exIndex,
                                       "weightUsed",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
-                                  onBlur={(e) =>
+                                  onBlur={() =>
                                     saveLog({
                                       workout_id: workout.id,
                                       day: day.day,
                                       exercise_name: ex.name,
-                                      weight: e.target.value,
+                                      weight: ex.weightUsed || "",
                                       reps_completed: ex.repsCompleted || "",
                                     })
                                   }
@@ -184,18 +199,18 @@ export default function WorkoutList() {
                                       dayIndex,
                                       exIndex,
                                       "repsCompleted",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
-                                  onBlur={(e) =>
+                                  onBlur={() =>
                                     saveLog({
                                       workout_id: workout.id,
                                       day: day.day,
                                       exercise_name: ex.name,
                                       weight: ex.weightUsed || "",
-                                      reps_completed: e.target.value
+                                      reps_completed: ex.repsCompleted || "",
                                     })
-                                  } 
+                                  }
                                 />
                               </td>
                             </tr>
