@@ -40,4 +40,16 @@ const getWorkoutLogs = async (userId) => {
     return result.rows
 }
 
-module.exports = { saveWorkoutLog, getExerciseProgress, getWorkoutLogs }
+async function getLastSetForExercise(userId, exercise) {
+    const result = await pool.query(
+        `SELECT weight, reps_completed FROM workout_logs
+        WHERE user_id = $1 AND exercise_name = $2
+        ORDER BY created_at DESC
+        LIMIT 1`,
+        [userId, exercise]
+    )
+
+    return result.rows[0]
+}
+
+module.exports = { saveWorkoutLog, getExerciseProgress, getWorkoutLogs, getLastSetForExercise }

@@ -1,8 +1,14 @@
-const { saveWorkoutLog, getExerciseProgress, getWorkoutLogs } = require("../services/workoutLog.service")
+const { saveWorkoutLog, getExerciseProgress, getWorkoutLogs, getLastSetForExercise } = require("../services/workoutLog.service")
 
 async function createLog(req, res) {
     try {
-        const log = await saveWorkoutLog(req.body)
+        const userId = req.user.userId
+
+        const log = await saveWorkoutLog({
+            ...req.body,
+            user_id: userId
+        })
+        
         res.json(log)
     } catch (err) {
         console.error(err)
@@ -35,4 +41,21 @@ async function getLogs(req, res) {
     }
 }
 
-module.exports = { createLog, getProgress, getLogs }
+async function getLastSet(req, res) {
+    try {
+        const userId = req.user.userId
+        const { exercise } = req.query
+
+        if (!exercise) {
+            return res.status(400).json({ error: "Exercise is required" })
+        }
+
+        const data = await getLastSetForExercise(userId, exercise)
+        res.json(data || {})
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({ error: "Failed to fetch last set" })
+    }
+}
+
+module.exports = { createLog, getProgress, getLogs, getLastSet }

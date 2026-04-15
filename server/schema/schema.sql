@@ -30,8 +30,9 @@ CREATE TABLE workout_logs(
     workout_id INTEGER REFERENCES workouts(id) ON DELETE CASCADE,
     day TEXT,
     exercise_name TEXT,
-    weight NUMERIC,
-    reps_completed TEXT,
+    set_number INT,
+    weight INT,
+    reps_completed INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

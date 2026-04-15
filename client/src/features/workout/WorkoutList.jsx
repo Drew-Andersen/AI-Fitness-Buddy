@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
+import "./styles.css"
 
 export default function WorkoutList() {
-  const [workouts, setWorkouts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [expandedIds, setExpandedIds] = useState([]);
+  const [workouts, setWorkouts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [expandedIds, setExpandedIds] = useState([])
 
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token")
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) return
 
     fetch("http://localhost:3001/workout", {
       headers: {
@@ -16,214 +17,230 @@ export default function WorkoutList() {
       },
     })
       .then(async (res) => {
-        const text = await res.text();
-
-        console.log("WORKOUT RESPONSE:", text);
-
-        if (!res.ok) throw new Error(text || "Request failed");
-
-        return text ? JSON.parse(text) : [];
+        const text = await res.text()
+        if (!res.ok) throw new Error(text)
+        return text ? JSON.parse(text) : []
       })
       .then((data) => {
-        setWorkouts(data || []);
-        setLoading(false);
+        setWorkouts(data || [])
+        setLoading(false)
       })
       .catch((err) => {
-        console.error("Failed to fetch workouts", err);
+        console.error(err)
         setLoading(false);
-      });
+      })
   }, [token]);
 
   const toggleExpand = (id) => {
     setExpandedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
 
-  const handleInputChange = (workoutId, dayIndex, exIndex, field, value) => {
+  const fetchLastSet = async (exerciseName, workoutId, dayIndex, exIndex) => {
+    try {
+      const res = await fetch(`http://localhost:3001/workout-logs/last?exercise=${encodeURIComponent(
+        exerciseName
+      )}`,
+    {headers: {Authorization: `Bearer ${token}`,}})
+
+    const data = await res.json()
+
+    setWorkouts((prev) => 
+      prev.map((w) => {
+        if (w.id !== workoutId) return w
+
+        const updatedPlan = w.plan[0].plan.map((day, dIdx) => {
+          if (dIdx !== dayIndex) return day
+
+          const updatedExercises = day.exercises.map((ex, eIdx) => {
+            if (eIdx !== exIndex) return ex
+
+            if (ex.loggedSets) return ex
+
+            const sets = Array.from({ length: ex.sets }, (_, i) => {
+              if (i === 0) {
+                return {
+                  reps: data?.reps_completed || "",
+                  weight: data?.weight || "",
+                }
+              }
+              return { reps: "", weight: "" }
+            })
+            return { ...ex, loggedSets: sets }
+          })
+          return {...day, exercises: updatedExercises }
+        })
+        return {...w, plan: [{ ...w.plan[0], plan: updatedPlan }]}
+      })
+    )
+    } catch (err) {
+      console.error("Failed to fetch last set", err)
+    }
+  }
+
+  const handleSetChange = (workoutId, dayIndex, exIndex, setIndex, field, value) => {
     setWorkouts((prev) =>
-      prev.map((workout) => {
-        if (workout.id !== workoutId) return workout;
+      prev.map((w) => {
+        if (w.id !== workoutId) return w
 
-        const updatedPlan = workout.plan?.[0]?.plan?.map((day, dIdx) => {
-          if (dIdx !== dayIndex) return day;
+        const updatedPlan = w.plan[0].plan.map((day, dIdx) => {
+          if (dIdx !== dayIndex) return day
 
-          const updatedExercises =
-            day.exercises?.map((ex, eIdx) => {
-              if (eIdx !== exIndex) return ex;
+          const updatedExercises = day.exercises.map((ex, eIdx) => {
+            if (eIdx !== exIndex) return ex
 
-              return {
-                ...ex,
-                [field]: value,
-              };
-            }) || [];
+            const sets = [...(ex.loggedSets || [])]
 
-          return { ...day, exercises: updatedExercises };
+            sets[setIndex] = {
+              ...sets[setIndex],
+              [field]: value
+            }
+
+            const currentSet = sets[setIndex]
+            const nextSet = sets[setIndex + 1]
+
+            if (
+              currentSet?.reps && currentSet?.weight && nextSet &&
+              !nextSet.reps && !nextSet.weight
+            ) {
+              sets[setIndex +1] = {
+                reps: currentSet.reps,
+                weight: currentSet.weight,
+              }
+            }
+
+            return { ...ex, loggedSets: sets }
+          });
+
+          return { ...day, exercises: updatedExercises }
         });
 
-        return {
-          ...workout,
-          plan: [{ ...workout.plan?.[0], plan: updatedPlan }],
-        };
-      }),
+        return { ...w, plan: [{ ...w.plan[0], plan: updatedPlan }] }
+      })
     );
   };
 
-  const saveLog = async (log) => {
+  const saveSet = async (log) => {
     try {
-      const res = await fetch("http://localhost:3001/workout-logs", {
+      await fetch("http://localhost:3001/workout-logs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(log),
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text);
-      }
+      })
     } catch (err) {
-      console.error("Failed to save log", err);
+      console.error(err)
     }
-  };
+  }
 
-  if (loading) return <p>Loading workouts...</p>;
-  if (!workouts.length) return <p>No workouts saved yet.</p>;
+  if (loading) return <p>Loading workouts...</p>
+  if (!workouts.length) return <p>No workouts yet.</p>
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      {workouts.map((workout) => {
-        const isExpanded = expandedIds.includes(workout.id);
-        const dayPlans = workout.plan?.[0]?.plan || [];
+    <div className="container">
+      {workouts.map((workout, wIndex) => {
+        const isExpanded = expandedIds.includes(workout.id)
+        const days = workout.plan?.[0]?.plan || []
 
         return (
-          <div
-            key={workout.id}
-            style={{
-              border: "1px solid #ccc",
-              borderRadius: "8px",
-              padding: "1rem",
-              background: "#f9f9f9",
-            }}
-          >
+          <div key={workout.id} id="workout-card" className="card">
             <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                cursor: "pointer",
-              }}
+              style={{ display: "flex", justifyContent: "space-between", cursor: "pointer" }}
               onClick={() => toggleExpand(workout.id)}
             >
-              <div>
-                <p>
-                  <strong>Workout ID:</strong> {workout.id}
-                </p>
-                <p>
-                  <strong>Date:</strong>{" "}
-                  {new Date(workout.created_at).toLocaleDateString()}
-                </p>
-              </div>
-              <div>{isExpanded ? "▲ Collapse" : "▼ Expand"}</div>
+              <h2>Week {wIndex + 1}</h2>
+              <span>{isExpanded ? "▲" : "▼"}</span>
             </div>
 
-            {isExpanded && (
-              <div style={{ marginTop: "1rem" }}>
-                {dayPlans.length ? (
-                  dayPlans.map((day, dayIndex) => (
-                    <div key={dayIndex} style={{ marginBottom: "1rem" }}>
-                      <h3>
-                        {day.day} - {day.focus}
-                      </h3>
+            {isExpanded &&
+              days.map((day, dayIndex) => (
+                <div key={dayIndex} style={{ marginTop: "1rem" }}>
+                  <h3>
+                    Day {dayIndex + 1} — {day.focus}
+                  </h3>
 
-                      <table
-                        style={{
-                          width: "100%",
-                          borderCollapse: "collapse",
-                        }}
-                      >
-                        <thead>
-                          <tr>
-                            <th>Exercise</th>
-                            <th>Sets</th>
-                            <th>Target</th>
-                            <th>Weight</th>
-                            <th>Completed</th>
-                          </tr>
-                        </thead>
+                  {day.exercises?.map((ex, exIndex) => {
+                    if (!ex.loggedSets) {
+                      fetchLastSet(ex.name, workout.id, dayIndex, exIndex)
+                    }
+                  
+                  return  (
+                    <div key={exIndex} className="card" style={{ marginTop: "1rem" }}>
+                      <h4>{ex.name}</h4>
 
-                        <tbody>
-                          {day.exercises?.map((ex, exIndex) => (
-                            <tr key={exIndex}>
-                              <td>{ex.name}</td>
-                              <td>{ex.sets}</td>
-                              <td>{ex.reps || ex.duration}</td>
+                      {(ex.loggedSets || Array.from({ length: ex.sets }, () => ({
+                        reps: "",
+                        weight: ""
+                      }))).map(
+                        (set, setIndex) => (
+                          <div
+                            key={setIndex}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "10px",
+                              marginBottom: "8px",
+                            }}
+                          >
+                            <span>Set {setIndex + 1}</span>
 
-                              {/* Weight Used */}
-                              <td>
-                                <input
-                                  type="number"
-                                  placeholder="lbs"
-                                  value={ex.weightUsed || ""}
-                                  onChange={(e) =>
-                                    handleInputChange(
-                                      workout.id,
-                                      dayIndex,
-                                      exIndex,
-                                      "weightUsed",
-                                      e.target.value,
-                                    )
-                                  }
-                                  onBlur={() =>
-                                    saveLog({
-                                      workout_id: workout.id,
-                                      day: day.day,
-                                      exercise_name: ex.name,
-                                      weight: ex.weightUsed || "",
-                                      reps_completed: ex.repsCompleted || "",
-                                    })
-                                  }
-                                />
-                              </td>
+                            <input
+                              className="input"
+                              value={set?.reps || ""}
+                              placeholder={ex.reps || ex.duration || "-"}
+                              onChange={(e) =>
+                                handleSetChange(
+                                  workout.id,
+                                  dayIndex,
+                                  exIndex,
+                                  setIndex,
+                                  "reps",
+                                  e.target.value
+                                )
+                              }
+                            />
 
-                              {/* Reps completed */}
-                              <td>
-                                <input
-                                  type="text"
-                                  placeholder="reps"
-                                  value={ex.repsCompleted || ""}
-                                  onChange={(e) =>
-                                    handleInputChange(
-                                      workout.id,
-                                      dayIndex,
-                                      exIndex,
-                                      "repsCompleted",
-                                      e.target.value,
-                                    )
-                                  }
-                                  onBlur={() =>
-                                    saveLog({
-                                      workout_id: workout.id,
-                                      day: day.day,
-                                      exercise_name: ex.name,
-                                      weight: ex.weightUsed || "",
-                                      reps_completed: ex.repsCompleted || "",
-                                    })
-                                  }
-                                />
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ))
-                ) : (
-                  <p>No plan available</p>
-                )}
-              </div>
-            )}
+                            <input
+                              className="input"
+                              value={set?.weight || ""}
+                              placeholder="lbs"
+                              onChange={(e) =>
+                                handleSetChange(
+                                  workout.id,
+                                  dayIndex,
+                                  exIndex,
+                                  setIndex,
+                                  "weight",
+                                  e.target.value
+                                )
+                              }
+                            />
+
+                            <button
+                              className="button-primary"
+                              onClick={() =>
+                                saveSet({
+                                  workout_id: workout.id,
+                                  day: day.day,
+                                  exercise_name: ex.name,
+                                  set_number: setIndex + 1,
+                                  weight: set?.weight,
+                                  reps_completed: set?.reps,
+                                })
+                              }
+                            >
+                              Log Set
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
           </div>
         );
       })}

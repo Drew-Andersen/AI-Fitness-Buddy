@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { useContext } from "react"
 
 import { AuthContext } from "./context/AuthContext"
+import "./app.css"
 
 import Navbar from "./components/Navbar"
 import Login from "./pages/Login"

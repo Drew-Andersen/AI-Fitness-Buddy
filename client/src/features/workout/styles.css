@@ -1,0 +1,68 @@
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 2rem;
+}
+
+#workout-card {
+  margin: 1rem;
+}
+
+.card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  transition: 0.2s;
+}
+
+.card:hover {
+  border-color: var(--accent-red);
+  background-color: #141a26;
+}
+
+.button-primary {
+  background: var(--accent-red);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.button-primary:hover {
+  background: var(--accent-red-dark);
+}
+
+.input {
+  background: #020617;
+  border: 1px solid var(--border);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 6px;
+  width: 70px;
+  text-align: center;
+}
+
+.workoutForm {
+  background-color: #141a26;
+  color: white;
+  margin: 0 1rem;
+  border-radius: 3px;
+}
+
+.workoutForm::placeholder {
+  color: white;
+}
+
+.button:hover {
+  background-color: #1c2435;
+  transform: scale(1.05);
+}

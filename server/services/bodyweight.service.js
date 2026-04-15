@@ -2,7 +2,7 @@ const pool = require("../db")
 
 const addBodyweight = async (userId, weight) => {
     const result = await pool.query(
-        `INSERT INTO bodyweight_logs (user_id weight)
+        `INSERT INTO bodyweight_logs (user_id, weight)
         VALUES ($1, $2) RETURNING *`,
         [userId, weight]
     )
@@ -10,7 +10,7 @@ const addBodyweight = async (userId, weight) => {
 }
 
 const getBodyweightLogs = async (userId) => {
-    const result = pool.query(
+    const result = await pool.query(
         `SELECT * FROM bodyweight_logs
         WHERE user_id = $1 ORDER BY created_at ASC`,
         [userId]

@@ -27,7 +27,7 @@ def generate_workout_plan(user_data):
     - Retuirn ONLY valid JSON
     - Do NOT include markdown (no```json)
     - Do NOT include explanations
-    - Output nust be directly parsable
+    - Output must be directly parsable
 
     Format:
     [
@@ -41,7 +41,7 @@ def generate_workout_plan(user_data):
                 {{
                     "name": "Bench Press",
                     "sets": 4,
-                    "reps": "8-10"
+                    "reps": "10"
                 }}
             ]
         ]

@@ -45,7 +45,7 @@ export default function Dashboard() {
   }, [token])
 
   const handleAddWeight = async () => {
-    await fetch("http://localhost:3001/bodyweight", {
+    const res = await fetch("http://localhost:3001/bodyweight", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -54,15 +54,20 @@ export default function Dashboard() {
       body: JSON.stringify({ weight: newWeight }),
     });
 
+    if (!res.ok) {
+      const text = await res.text()
+      throw new Error(text)
+    }
+
     setNewWeight("")
 
-    const res = await fetch("http://localhost:3001/bodyweight", {
+    const updated = await fetch("http://localhost:3001/bodyweight", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-    const data = await res.json()
+    const data = await updated.json()
     setBodyweightLogs(data)
   };
 
