@@ -1,9 +1,10 @@
 const express = require("express")
 const router = express.Router()
-const { generateWorkout, getWorkouts } = require("../controllers/workoutController")
+const { generateWorkout, getActive, finishWorkout } = require("../controllers/workoutController")
 const authMiddleware = require("../middleware/authMiddleware")
 
-router.get("/", authMiddleware, getWorkouts)
 router.post("/generate", authMiddleware, generateWorkout)
+router.get("/active", authMiddleware, getActive)
+router.post("/finish", authMiddleware, finishWorkout)
 
 module.exports = router
