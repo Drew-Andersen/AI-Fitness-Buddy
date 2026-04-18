@@ -11,7 +11,7 @@ export default function WorkoutList() {
   useEffect(() => {
     if (!token) return
 
-    fetch("http://localhost:3001/workout", {
+    fetch("http://localhost:3001/workout/active", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -22,7 +22,7 @@ export default function WorkoutList() {
         return text ? JSON.parse(text) : []
       })
       .then((data) => {
-        setWorkouts(data || [])
+        setWorkouts(data ? [data] : [])
         setLoading(false)
       })
       .catch((err) => {
@@ -143,7 +143,7 @@ export default function WorkoutList() {
     <div className="container">
       {workouts.map((workout, wIndex) => {
         const isExpanded = expandedIds.includes(workout.id)
-        const days = workout.plan?.[0]?.plan || []
+        const days = workout.plan_json?.plan || []
 
         return (
           <div key={workout.id} id="workout-card" className="card">

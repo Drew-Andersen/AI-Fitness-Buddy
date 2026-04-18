@@ -18,16 +18,31 @@ CREATE TABLE users (
 -- Workouts Table
 CREATE TABLE workouts (
     id SERIAL PRIMARY KEY,
-    user_id INT,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
     plan JSONB NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE active_workouts (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    plan_json JSONB NOT NULL,
+    status TEXT DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    completed_at TIMESTAMP
+);
+
+CREATE TABLE completed_workouts (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    plan_json JSONB NOT NULL,
+    completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE workout_logs(
-    id SERIAL PRIMARY KEY
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    workout_id INTEGER REFERENCES workouts(id) ON DELETE CASCADE,
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    workout_id INT,
     day TEXT,
     exercise_name TEXT,
     set_number INT,
@@ -38,7 +53,7 @@ CREATE TABLE workout_logs(
 
 CREATE TABLE bodyweight_logs (
     id SERIAL PRIMARY KEY,
-    user_id INt REFERENCES users(id) ON DELETE CASCADE,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
     weight NUMERIC NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
