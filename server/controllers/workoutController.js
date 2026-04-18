@@ -12,6 +12,8 @@ async function generateWorkout(req, res) {
     const plan = await generateWorkoutAI({ weight, goal, experience })
     const saved = await saveActiveWorkout(userId, plan)
 
+    console.log("PLAN:", plan)
+
     res.json(saved)
   } catch(err) {
     console.error(err)
