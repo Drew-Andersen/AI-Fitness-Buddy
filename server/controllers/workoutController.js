@@ -21,11 +21,16 @@ async function generateWorkout(req, res) {
   }
 }
 
-async function getActive(req,res) {
+async function getActive(req, res) {
   try {
     const userId = req.user.userId
 
     const workout = await getActiveWorkout(userId)
+
+    console.log(
+      "ACTIVE WORKOUT:",
+      JSON.stringify(workout, null, 2)
+    )
 
     res.json(workout || null)
   } catch (err) {

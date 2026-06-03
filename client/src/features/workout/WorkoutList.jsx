@@ -1,15 +1,15 @@
-import { useEffect, useState } from "react"
-import "./styles.css"
+import { useEffect, useState } from "react";
+import "./styles.css";
 
 export default function WorkoutList() {
-  const [workouts, setWorkouts] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [expandedIds, setExpandedIds] = useState([])
+  const [workouts, setWorkouts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedIds, setExpandedIds] = useState([]);
 
-  const token = localStorage.getItem("token")
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    if (!token) return
+    if (!token) return;
 
     fetch("http://localhost:3001/workout/active", {
       headers: {
@@ -17,107 +17,127 @@ export default function WorkoutList() {
       },
     })
       .then(async (res) => {
-        const text = await res.text()
-        if (!res.ok) throw new Error(text)
-        return text ? JSON.parse(text) : []
+        const text = await res.text();
+        if (!res.ok) throw new Error(text);
+        return text ? JSON.parse(text) : [];
       })
       .then((data) => {
-        setWorkouts(data ? [data] : [])
-        setLoading(false)
-      })
-      .catch((err) => {
-        console.error(err)
+        console.log("ACTIVE WORKOUT DATA:", data);
+
+        setWorkouts(data ? [data] : []);
         setLoading(false);
       })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
   }, [token]);
 
   const toggleExpand = (id) => {
     setExpandedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
 
-  const fetchLastSet = async (exerciseName, workoutId, dayIndex, exIndex) => {
-    try {
-      const res = await fetch(`http://localhost:3001/workout-logs/last?exercise=${encodeURIComponent(
-        exerciseName
-      )}`,
-    {headers: {Authorization: `Bearer ${token}`,}})
+  // const fetchLastSet = async (exerciseName, workoutId, dayIndex, exIndex) => {
+  //   try {
+  //     const res = await fetch(`http://localhost:3001/workout-logs/last?exercise=${encodeURIComponent(
+  //       exerciseName
+  //     )}`,
+  //   {headers: {Authorization: `Bearer ${token}`,}})
 
-    const data = await res.json()
+  //   const data = await res.json()
 
-    setWorkouts((prev) => 
-      prev.map((w) => {
-        if (w.id !== workoutId) return w
+  //   setWorkouts((prev) =>
+  //     prev.map((w) => {
+  //       if (w.id !== workoutId) return w
 
-        const updatedPlan = w.plan[0].plan.map((day, dIdx) => {
-          if (dIdx !== dayIndex) return day
+  //       const updatedPlan = w.plan[0].plan.map((day, dIdx) => {
+  //         if (dIdx !== dayIndex) return day
 
-          const updatedExercises = day.exercises.map((ex, eIdx) => {
-            if (eIdx !== exIndex) return ex
+  //         const updatedExercises = day.exercises.map((ex, eIdx) => {
+  //           if (eIdx !== exIndex) return ex
 
-            if (ex.loggedSets) return ex
+  //           if (ex.loggedSets) return ex
 
-            const sets = Array.from({ length: ex.sets }, (_, i) => {
-              if (i === 0) {
-                return {
-                  reps: data?.reps_completed || "",
-                  weight: data?.weight || "",
-                }
-              }
-              return { reps: "", weight: "" }
-            })
-            return { ...ex, loggedSets: sets }
-          })
-          return {...day, exercises: updatedExercises }
-        })
-        return {...w, plan: [{ ...w.plan[0], plan: updatedPlan }]}
-      })
-    )
-    } catch (err) {
-      console.error("Failed to fetch last set", err)
-    }
-  }
+  //           const sets = Array.from({ length: ex.sets }, (_, i) => {
+  //             if (i === 0) {
+  //               return {
+  //                 reps: data?.reps_completed || "",
+  //                 weight: data?.weight || "",
+  //               }
+  //             }
+  //             return { reps: "", weight: "" }
+  //           })
+  //           return { ...ex, loggedSets: sets }
+  //         })
+  //         return {...day, exercises: updatedExercises }
+  //       })
+  //       return {...w, plan: [{ ...w.plan[0], plan: updatedPlan }]}
+  //     })
+  //   )
+  //   } catch (err) {
+  //     console.error("Failed to fetch last set", err)
+  //   }
+  // }
 
-  const handleSetChange = (workoutId, dayIndex, exIndex, setIndex, field, value) => {
+  const handleSetChange = (
+    workoutId,
+    dayIndex,
+    exIndex,
+    setIndex,
+    field,
+    value,
+  ) => {
     setWorkouts((prev) =>
       prev.map((w) => {
-        if (w.id !== workoutId) return w
+        if (w.id !== workoutId) return w;
 
-        const updatedPlan = w.plan[0].plan.map((day, dIdx) => {
-          if (dIdx !== dayIndex) return day
+        const updatedPlan = w.plan_json[0].plan.map((day, dIdx) => {
+          if (dIdx !== dayIndex) return day;
 
           const updatedExercises = day.exercises.map((ex, eIdx) => {
-            if (eIdx !== exIndex) return ex
+            if (eIdx !== exIndex) return ex;
 
-            const sets = [...(ex.loggedSets || [])]
+            const sets = [...(ex.loggedSets || [])];
 
             sets[setIndex] = {
               ...sets[setIndex],
-              [field]: value
-            }
+              [field]: value,
+            };
 
-            const currentSet = sets[setIndex]
-            const nextSet = sets[setIndex + 1]
+            const currentSet = sets[setIndex];
+            const nextSet = sets[setIndex + 1];
 
             if (
-              currentSet?.reps && currentSet?.weight && nextSet &&
-              !nextSet.reps && !nextSet.weight
+              currentSet?.reps &&
+              currentSet?.weight &&
+              nextSet &&
+              !nextSet.reps &&
+              !nextSet.weight
             ) {
-              sets[setIndex +1] = {
+              sets[setIndex + 1] = {
                 reps: currentSet.reps,
                 weight: currentSet.weight,
-              }
+              };
             }
 
-            return { ...ex, loggedSets: sets }
+            return { ...ex, loggedSets: sets };
           });
 
-          return { ...day, exercises: updatedExercises }
+          return { ...day, exercises: updatedExercises };
         });
 
-        return { ...w, plan: [{ ...w.plan[0], plan: updatedPlan }] }
-      })
+        return {
+          ...w,
+          plan_json: [
+            {
+              ...w.plan_json[0],
+              plan: updatedPlan,
+            },
+          ],
+        };
+      }),
     );
   };
 
@@ -130,25 +150,35 @@ export default function WorkoutList() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(log),
-      })
+      });
     } catch (err) {
-      console.error(err)
+      console.error(err);
     }
-  }
+  };
 
-  if (loading) return <p>Loading workouts...</p>
-  if (!workouts.length) return <p>No workouts yet.</p>
+  if (loading) return <p>Loading workouts...</p>;
+  if (!workouts.length) return <p>No workouts yet.</p>;
 
   return (
     <div className="container">
       {workouts.map((workout, wIndex) => {
-        const isExpanded = expandedIds.includes(workout.id)
-        const days = workout.plan_json?.plan || []
+        const isExpanded = expandedIds.includes(workout.id);
+        // Added some logs to find the error
+        console.log("WORKOUT:", workout);
+        console.log("PLAN_JSON:", workout.plan_json);
+
+        const days = workout.plan_json?.[0]?.plan || [];
+        // Added some logs to find the error
+        console.log("DAYS:", days);
 
         return (
           <div key={workout.id} id="workout-card" className="card">
             <div
-              style={{ display: "flex", justifyContent: "space-between", cursor: "pointer" }}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                cursor: "pointer",
+              }}
               onClick={() => toggleExpand(workout.id)}
             >
               <h2>Week {wIndex + 1}</h2>
@@ -163,19 +193,25 @@ export default function WorkoutList() {
                   </h3>
 
                   {day.exercises?.map((ex, exIndex) => {
-                    if (!ex.loggedSets) {
-                      fetchLastSet(ex.name, workout.id, dayIndex, exIndex)
-                    }
-                  
-                  return  (
-                    <div key={exIndex} className="card" style={{ marginTop: "1rem" }}>
-                      <h4>{ex.name}</h4>
+                    // if (!ex.loggedSets) {
+                    //   fetchLastSet(ex.name, workout.id, dayIndex, exIndex)
+                    // }
 
-                      {(ex.loggedSets || Array.from({ length: ex.sets }, () => ({
-                        reps: "",
-                        weight: ""
-                      }))).map(
-                        (set, setIndex) => (
+                    return (
+                      <div
+                        key={exIndex}
+                        className="card"
+                        style={{ marginTop: "1rem" }}
+                      >
+                        <h4>{ex.name}</h4>
+
+                        {(
+                          ex.loggedSets ||
+                          Array.from({ length: ex.sets }, () => ({
+                            reps: "",
+                            weight: "",
+                          }))
+                        ).map((set, setIndex) => (
                           <div
                             key={setIndex}
                             style={{
@@ -198,7 +234,7 @@ export default function WorkoutList() {
                                   exIndex,
                                   setIndex,
                                   "reps",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                             />
@@ -214,7 +250,7 @@ export default function WorkoutList() {
                                   exIndex,
                                   setIndex,
                                   "weight",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                             />
